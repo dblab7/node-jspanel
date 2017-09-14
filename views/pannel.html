@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jsPanel - a jQuery Plugin</title>
+    <!-- loading jsPanel css -->
+    <link rel="stylesheet" href="./css/jspanel/jquery.jspanel.min.css"> 
+  <link rel="stylesheet" href="./css/jspanel/jquery-ui.min.css"> 
+
+  <style> 
+    @font-face {
+      font-family: "jsglyph";
+      src: url("./fonts/jsglyph.eot");
+      src: url("./fonts/jsglyph.eot?#iefix") format("embedded-opentype"), url("./fonts/jsglyph.ttf") format("truetype"), url("./fonts/jsglyph.woff") format("woff"), url("./fonts/jsglyph.svg#jsglyph") format("svg"); } 
+
+    .scrollbar-inner{background-color:#fff;} 
+
+	#jsPanel{ 
+	  display: table; 
+      position: relative;
+	  width: 100%;
+	  vertical-align: top;
+    }
+	
+	#jsPanel #jsPanel-top {
+	  display: table-cell; 
+	  vertical-align: middle;
+	} 
+
+	#jsPanel .slimScrollDiv { 
+      width: 100% !important; 
+	}
+
+    #jsPanel #jsPanel-wrap{  
+	  display: table-cell; 
+	  vertical-align: middle;
+      position: relative;
+      left: 0px;
+      margin-right: 30px;  
+	  display: inline-block;
+    }
+    
+	#jsPanel #jsPanel-header { 
+	  display: table-cell; 
+	  vertical-align: middle;
+      background-color: #d9edf7;
+      
+
+      margin-right: 30px; 
+      width: 100%; 
+    }
+    
+	.bold {
+		font-weight: bold;
+	} 
+
+
+/*
+    #jsPanel-sort{position:absolute;float:left;width:100%;height:15px;z-index:9999;background-color:#fff;margin-left:-10px;}
+    #jsPanel-sort #nsort{float:right;width:auto;height:15px;line-height:15px;cursor:pointer;font-size:12px;}
+*/
+	#jsPanel-top{position:relative;float:left;width:100%;height:90%;} 
+    #jsPanel-wrap{position:relative;float:left;width:100%;height:90%;} 
+
+    ul{list-style:none;font-size:13px;line-height:1.471;margin:0px;padding:0px 10px;}
+    ul li.jsPanel-li{position:relative;float:left;width:100%;border-bottom:1px solid #e8e8e8;background-color:#fff;}
+
+    ul li.jsPanel-li .block{margin:0px;margin-left:0px;border-left:3px solid #e8e8e8;border-right:3px solid #e8e8e8;overflow:visible;padding:10px 15px;}
+    ul li.jsPanel-li *::before, #jsPanel-ul li.jsPanel-li *::after{box-sizing:border-box;-webkit-box-sizing:border-box:-moz-box-sizing:border-box;}
+
+    #jsPanel-wrap ul li.jsPanel-li .block .block_content{cursor:pointer;}
+    ul li.jsPanel-li .block .block_content h2.title{position:relative;font-size:13px;margin:0px;line-height:17px;display: inline-block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+    ul li.jsPanel-li .block .block_content div.byline .docu{font-size:13px;color: #5a738e;font-style: normal;display: inline-block;width:22%;} 
+    ul li.jsPanel-li .block .block_content div.byline .file{font-size:13px;color: #000000;font-weight: normal;font-style: normal;display: inline-block;width:33%;}
+    ul li.jsPanel-li .block .block_content div.byline .person{font-size:13px;color: #000000;font-weight: normal;font-style: normal;display: inline-block;width:15%;}
+	ul li.jsPanel-li .block .block_content div.byline .date{font-size:13px;color: #000000;font-weight: normal;font-style: normal;display: inline-block;width:30%;}
+  </style>
+</head>
+<body>
+
+<!-- Your HTML goes here -->
+
+<!-- loading jQuery -->
+<script src="./js/jspanel/jquery-3.2.1.min.js"></script>
+<!-- loading jsPanel javascript -->
+<script src="./js/jspanel/jquery.jspanel-compiled.js"></script>
+<script src="./js/jspanel/jquery.slimscroll.min.js"></script>
+
+<script>  
+  var obj = $( this );
+  var result; 
+  getData(); 
+
+  function getData(){ 
+    var url = "http://swing.swmail.co.kr/websquare/DS1119M.asp";
+    var param = "?EMP_ID="+'160085';
+    url = url + param;
+    $.ajax({
+      url: url,
+      dataType: 'jsonp',
+      jsonp: 'callback',
+      timeout: 300000,
+      crossDomain: true,
+      type: 'POST',
+      cache: false,
+      contentType: "application/x-www-form-urlencoded; charset=euc-kr",  
+      error: function(request,status,error) {
+        //alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+      },
+      success: function (data) {
+        result = data;
+        if(result.length > 0){ 
+		  makePanel();  
+		  setEvent(); 
+		  makeScroll();
+
+        }else {
+	      makePanel();  
+		  setEvent(); 
+		  makeScroll();
+          //return;
+        }
+      }
+    });
+  };
+	
+	function setEvent(){ 
+	debugger;
+		$(document).on('click', ".jsPanel-btn-maximize", function () { 
+			$(".scrollbar-inner").slimScroll({
+				height: $(".jsPanel-content").height() - 40 
+			});
+		});
+		
+		$(document).on('click', ".jsPanel-btn-normalize", function () { 
+			$(".scrollbar-inner").slimScroll({
+				height: $(".jsPanel-content").height() - 40 
+			});
+		});
+		/*
+		$(document).on('resize', "#jsPanel-1", function () { 
+			$(".scrollbar-inner").slimScroll({
+				height: $(".jsPanel-content").height() - 40 
+			});
+		});
+		*/ 
+
+		var dragging = false;
+				var iX, iY; 
+				//$(document).on("mousedown", "#jsPanel", function() {
+				$("#jsPanel-1").mousedown(function(e) {
+					console.log(1);
+					dragging = true;
+					iX = e.clientX - this.offsetLeft;
+					iY = e.clientY - this.offsetTop;
+					this.setCapture && this.setCapture();
+					return false;
+				});
+				document.onmousemove = function(e) {
+					console.log(2);
+					if (dragging) {
+						var e = e || window.event;
+						var oX = e.clientX - iX;
+						var oY = e.clientY - iY;
+						$("#jsPanel-1").css({"left":oX + "px", "top":oY + "px"});
+						return false;
+					}
+				};
+				$(document).mouseup(function(e) {
+					console.log(3);
+					dragging = false;
+					//$("#jsPanel")[0].releaseCapture();
+					e.cancelBubble = true;
+				})
+  }; 
+			
+	
+	
+	
+
+  function gotoPop(url) { 
+	alert(url);
+  }; 
+  
+  function dateToYYYYMMDD(date){
+  debugger;  
+	var str = date.split(":");
+	var returnDate = date != "" ? str[0] + "시" : "";
+	return returnDate;
+  };
+
+  function makeScroll(){ 
+    $("#jsPanel-wrap").wrap( "<div class='scrollbar-inner'></div>" );
+    $(".scrollbar-inner").slimScroll({
+      height: $(".jsPanel-content").height() - 40 
+    });
+  };
+
+  function makeList(){  
+	$("#jsPanel-top").empty();      
+    $("#jsPanel-top").append("<ul id='jsPanel-top-ul'></ul>");
+    
+    var liHtml; 
+      liHtml = "<li id='jsPanel-header' class='jsPanel-li'><div class='block'><div class='block_content'>";
+      liHtml = liHtml + "<div class='byline'><div class='docu'><span class='bold'>문서ID</span></div><div class='file'><span class='bold'>FILE번호</span></div><div class='person'><span class='bold'>담당자</span></div><div class='date'><span class='bold'>사업부 결재일자</span></div></div>"; 
+      liHtml = liHtml + "</div></div></li>"; 
+      
+      $("#jsPanel-top-ul").append(liHtml); 
+	
+	  $("#jsPanel-wrap").empty();      
+      $("#jsPanel-wrap").append("<ul id='jsPanel-ul'></ul>");
+
+    for(var i=0;i<result.length;i++){ 
+	  var url = '"' + result[i].REPORT_URL + '"'; 
+
+      var liContentHtml; 
+      liContentHtml = "<li class='jsPanel-li' ondblclick='gotoPop("+url+")'><div class='block'><div class='block_content'>";
+      liContentHtml = liContentHtml + "<div class='byline'><div class='docu bold'><span>"+result[i].DOCU_ID+"</span></div><div class='file'><span>"+result[i].FILE_NO+"</span></div><div class='person'><span>"+result[i].ENTRY_PERSON_NM+"</span></div><div class='date'><span>"+dateToYYYYMMDD(result[i].RECENT_SIGN_DATE)+"</span></div></div>";
+      liContentHtml = liContentHtml + "</div></div></li>"; 
+
+
+      $("#jsPanel-ul").append(liContentHtml); 
+      $("#jsPanel-ul").append(liContentHtml);
+      $("#jsPanel-ul").append(liContentHtml);
+      $("#jsPanel-ul").append(liContentHtml);
+      $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+	  $("#jsPanel-ul").append(liContentHtml);
+     
+
+
+    } 
+
+    
+  };
+
+    //window.setTimeout(function () {
+	function makePanel() { 
+        var myPanel = $.jsPanel({ 
+      position:    {my: "right-bottom", at: "right-bottom", offsetX: -20, offsetY: -20}, 
+      contentSize: {width: 500, height: 350}, 
+      show:        'animated slideInUp', 
+      //paneltype:   'hint',  //일정시간 뒤 close
+            headerTitle: "공임합의 미결재 내역", 
+            theme: "primary", 
+      resizeit: {
+        minWidth:  450,
+        minHeight: 100,
+        start: function (panel, size) { 
+			$(".scrollbar-inner").slimScroll({
+				height: size.height - 110 
+			});
+        }, 
+		stop: function (panel, size) {  
+			$(".scrollbar-inner").slimScroll({
+				height: size.height - 110 
+			});
+        } 
+    }, 
+	/*draggable: {
+		disabled:  true
+	},*/ 
+	dragit: {
+		containment: 'window', /* example 1a uses: containment: 30 */
+		start: function (panel, position) {
+			//this.content.empty().append('<p>dragging started at left ' + position.left + ' and top ' + position.top + '</p>');
+		},
+		stop: function (panel, position) {
+			//this.content.empty().append('<p>dragging stopped at left ' + position.left + ' and top ' + position.top + '</p>');
+		}
+	}, 
+      content: "<div id='jsPanel'><div id='jsPanel-top'></div><div id='jsPanel-wrap'></div></div>", 
+            callback: function () {
+                this.content.css("padding", "15px");  
+        makeList(); 
+            }
+        });
+	}; 
+    //}, 1000);  
+
+	
+</script>
+
+
+</div>
+</body>
+</html>
